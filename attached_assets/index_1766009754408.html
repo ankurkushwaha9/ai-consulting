@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Request Desk - Standalone Preview</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- Icon Components (Lucide) ---
+        const ArrowRight = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        );
+        const Box = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></svg>
+        );
+        const Zap = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        );
+        const BarChart3 = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        );
+        const ShieldCheck = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+        );
+        const Users = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        );
+        const RefreshCw = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        );
+        const TrendingUp = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        );
+
+        // --- Main Component ---
+        function Home() {
+            const [formData, setFormData] = useState({
+                businessProblem: "",
+                inputs: "",
+                constraints: "",
+                successCriteria: ""
+            });
+
+            const calculateProgress = () => {
+                const fields = Object.values(formData);
+                const filledFields = fields.filter(field => field.trim().length > 0).length;
+                return (filledFields / fields.length) * 100;
+            };
+
+            const progress = calculateProgress();
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: value
+                }));
+            };
+
+            return (
+                <div className="min-h-screen font-sans bg-[#1a2942]">
+                    <style>{`
+                        @keyframes float {
+                            0%, 100% { transform: translateY(0); }
+                            50% { transform: translateY(-10px); }
+                        }
+                        .animate-float {
+                            animation: float 6s ease-in-out infinite;
+                        }
+
+                        /* Flip Card Styles */
+                        .flip-card {
+                            background-color: transparent;
+                            perspective: 1000px;
+                            height: 320px;
+                        }
+
+                        .flip-card-inner {
+                            position: relative;
+                            width: 100%;
+                            height: 100%;
+                            text-align: left;
+                            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                            transform-style: preserve-3d;
+                            cursor: pointer;
+                        }
+
+                        .flip-card:hover .flip-card-inner {
+                            transform: rotateY(180deg);
+                        }
+
+                        .flip-card-front, .flip-card-back {
+                            position: absolute;
+                            width: 100%;
+                            height: 100%;
+                            -webkit-backface-visibility: hidden;
+                            backface-visibility: hidden;
+                            border-radius: 0.75rem;
+                            padding: 2rem;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                        }
+
+                        .flip-card-front {
+                            background-color: white;
+                            color: #1a2942;
+                            border: 1px solid #e5e7eb;
+                        }
+
+                        .flip-card-back {
+                            background-color: #1a2942;
+                            color: white;
+                            transform: rotateY(180deg);
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            border: 1px solid #2d3f5f;
+                        }
+                    `}</style>
+
+                    {/* Hero Section Wrapper */}
+                    <div className="relative min-h-screen overflow-hidden text-white">
+                        {/* Background with gradient */}
+                        <div 
+                            className="absolute inset-0 z-0"
+                            style={{
+                                background: "linear-gradient(135deg, #1a2942 0%, #2d3f5f 100%)"
+                            }}
+                        />
+                        
+                        {/* Subtle accent glow */}
+                        <div 
+                            className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full opacity-20 blur-3xl pointer-events-none bg-[#00d9ff]"
+                        />
+
+                        {/* Navigation Banner */}
+                        <nav className="absolute top-0 left-0 right-0 z-50 px-6 py-6 max-w-7xl mx-auto w-full flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-[#00d9ff] rounded-md flex items-center justify-center shadow-lg shadow-[#00d9ff]/20">
+                                    <Box className="w-5 h-5 text-[#1a2942]" />
+                                </div>
+                                <span className="text-xl font-bold tracking-tight text-white">AI Desk</span>
+                            </div>
+                            
+                            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
+                                <a href="#" className="text-white hover:text-[#00d9ff] transition-colors duration-200">Requests</a>
+                                <a href="#" className="hover:text-white transition-colors duration-200">Models</a>
+                                <a href="#" className="hover:text-white transition-colors duration-200">Usage</a>
+                                <a href="#" className="hover:text-white transition-colors duration-200">Settings</a>
+                            </div>
+
+                            <div className="w-9 h-9 bg-white/10 rounded-full border border-white/10 hover:border-white/30 hover:bg-white/20 transition-all duration-200 cursor-pointer" />
+                        </nav>
+
+                        {/* Floating Chips */}
+                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                            {/* Top Left - Sales */}
+                            <div className="absolute top-[20%] left-[10%] animate-float" style={{ animationDelay: '0s', animationDuration: '4s' }}>
+                                <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-full border border-white/10 text-sm font-medium text-cyan-200/80 shadow-lg">
+                                    Sales
+                                </div>
+                            </div>
+
+                            {/* Top Right - Customer Success */}
+                            <div className="absolute top-[25%] right-[15%] animate-float" style={{ animationDelay: '1s', animationDuration: '5s' }}>
+                                <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-full border border-white/10 text-sm font-medium text-purple-200/80 shadow-lg">
+                                    Customer Success
+                                </div>
+                            </div>
+
+                            {/* Middle Left - Marketing */}
+                            <div className="absolute top-[45%] left-[5%] animate-float" style={{ animationDelay: '2.5s', animationDuration: '3.5s' }}>
+                                <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-full border border-white/10 text-sm font-medium text-pink-200/80 shadow-lg">
+                                    Marketing
+                                </div>
+                            </div>
+
+                            {/* Middle Right - Product */}
+                            <div className="absolute top-[50%] right-[8%] animate-float" style={{ animationDelay: '3.5s', animationDuration: '4.5s' }}>
+                                <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-full border border-white/10 text-sm font-medium text-emerald-200/80 shadow-lg">
+                                    Product
+                                </div>
+                            </div>
+
+                            {/* Bottom Left - AI tool customization */}
+                            <div className="absolute bottom-[20%] left-[15%] animate-float" style={{ animationDelay: '1.5s', animationDuration: '3s' }}>
+                                <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-full border border-white/10 text-sm font-medium text-blue-200/80 shadow-lg">
+                                    AI tool customization
+                                </div>
+                            </div>
+
+                            {/* Bottom Right - AI Agents */}
+                            <div className="absolute bottom-[25%] right-[20%] animate-float" style={{ animationDelay: '4s', animationDuration: '5.5s' }}>
+                                <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-full border border-white/10 text-sm font-medium text-amber-200/80 shadow-lg">
+                                    AI Agents
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Hero Content */}
+                        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 text-center max-w-7xl mx-auto">
+                            <div className="max-w-3xl mx-auto space-y-8 relative z-20">
+                                {/* Badge/Pill */}
+                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm mb-4">
+                                    <span className="text-xs font-medium tracking-wide text-cyan-300 uppercase">Internal Tool</span>
+                                </div>
+
+                                {/* Heading */}
+                                <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-tight drop-shadow-sm font-sans">
+                                    AI Request Desk
+                                </h1>
+
+                                {/* Subheading */}
+                                <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed font-light">
+                                    Centralized resource management for all your artificial intelligence needs. 
+                                    Streamline access, track usage, and manage approvals in one unified platform.
+                                </p>
+
+                                {/* CTA Button */}
+                                <div className="pt-4">
+                                    <button 
+                                        className="group relative inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white transition-all duration-200 bg-[#00d9ff] rounded-lg hover:bg-[#00b8d4] hover:scale-105 hover:shadow-xl hover:shadow-[#00d9ff]/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d9ff] focus:ring-offset-[#1a2942] shadow-lg shadow-[#00d9ff]/20 cursor-pointer active:scale-95"
+                                        onClick={() => {
+                                            document.getElementById('education-section')?.scrollIntoView({ behavior: 'smooth' });
+                                        }}
+                                    >
+                                        Start an AI Request Desk request
+                                        <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Features Section */}
+                    <div className="py-24 bg-gray-50 border-b border-gray-100">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                
+                                {/* Feature 1 */}
+                                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group">
+                                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6 text-blue-600 group-hover:scale-110 transition-transform duration-300">
+                                        <Zap className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[#1a2942] mb-3">Instant Requests</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Submit and manage AI resource requests in seconds. Real-time status tracking and instant notifications keep your team informed.
+                                    </p>
+                                </div>
+
+                                {/* Feature 2 */}
+                                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group">
+                                    <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-6 text-purple-600 group-hover:scale-110 transition-transform duration-300">
+                                        <BarChart3 className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[#1a2942] mb-3">Smart Analytics</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Gain deep insights into resource utilization, spending patterns, and team productivity with comprehensive dashboards.
+                                    </p>
+                                </div>
+
+                                {/* Feature 3 */}
+                                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group">
+                                    <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mb-6 text-emerald-600 group-hover:scale-110 transition-transform duration-300">
+                                        <ShieldCheck className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[#1a2942] mb-3">Enterprise Security</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Bank-level security with role-based access control, audit logs, and compliance features built for enterprise environments.
+                                    </p>
+                                </div>
+
+                                {/* Feature 4 */}
+                                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group">
+                                    <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition-transform duration-300">
+                                        🤝
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[#1a2942] mb-3">Team Collaboration</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Built-in collaboration tools allow teams to work together seamlessly on complex AI projects and requests.
+                                    </p>
+                                </div>
+
+                                {/* Feature 5 */}
+                                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group">
+                                    <div className="w-12 h-12 bg-cyan-50 rounded-xl flex items-center justify-center mb-6 text-cyan-600 group-hover:scale-110 transition-transform duration-300">
+                                        <RefreshCw className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[#1a2942] mb-3">Integrations</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Seamlessly integrate with your existing tools and platforms. Connect with APIs, webhooks, and popular services.
+                                    </p>
+                                </div>
+
+                                {/* Feature 6 */}
+                                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group">
+                                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-6 text-3xl group-hover:scale-110 transition-transform duration-300">
+                                        📈
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[#1a2942] mb-3">Growth Ready</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Scale with your organization. From startups to enterprises, AI Request Desk grows with your AI infrastructure needs.
+                                    </p>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Education Section - Flip Cards */}
+                    <div id="education-section" className="py-24 bg-white border-b border-gray-100">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center mb-16">
+                                <h2 className="text-3xl font-bold text-[#1a2942] mb-4">What a good Request submission looks like</h2>
+                                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                                    Hover over the cards below to see the difference between a weak and strong submission.
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                                
+                                {/* Weak Submission Card */}
+                                <div className="flip-card group">
+                                    <div className="flip-card-inner">
+                                        {/* Front */}
+                                        <div className="flip-card-front flex flex-col items-center justify-center text-center">
+                                            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-6 text-red-600 border border-red-100">
+                                                <span className="text-3xl">✕</span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-[#1a2942] mb-4">Weak Submission</h3>
+                                            <p className="text-gray-600 text-lg italic">
+                                                "I need AI for marketing."
+                                            </p>
+                                            <p className="text-sm text-gray-400 mt-auto flex items-center gap-1">
+                                                Hover to see why <ArrowRight className="w-3 h-3" />
+                                            </p>
+                                        </div>
+                                        
+                                        {/* Back */}
+                                        <div className="flip-card-back text-center">
+                                            <h3 className="text-xl font-bold text-red-400 mb-4">Why it falls short</h3>
+                                            <p className="text-gray-300 leading-relaxed">
+                                                This request is too vague. It lacks a specific use case, technical constraints, required data inputs, and measurable success criteria.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Strong Submission Card */}
+                                <div className="flip-card group">
+                                    <div className="flip-card-inner">
+                                        {/* Front */}
+                                        <div className="flip-card-front flex flex-col items-center justify-center text-center">
+                                            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-6 text-emerald-600 border border-emerald-100">
+                                                <span className="text-3xl">✓</span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-[#1a2942] mb-4">Strong Submission</h3>
+                                            <p className="text-gray-600 text-lg italic">
+                                                "I need a generative AI model to create SEO-optimized blog posts based on our product documentation..."
+                                            </p>
+                                            <p className="text-sm text-gray-400 mt-auto flex items-center gap-1">
+                                                Hover to see analysis <ArrowRight className="w-3 h-3" />
+                                            </p>
+                                        </div>
+                                        
+                                        {/* Back */}
+                                        <div className="flip-card-back text-center">
+                                            <h3 className="text-xl font-bold text-emerald-400 mb-4">Why it works</h3>
+                                            <p className="text-gray-300 leading-relaxed mb-4">
+                                                <strong>Specific Goal:</strong> SEO-optimized blog posts.<br/>
+                                                <strong>Source Data:</strong> Product documentation.<br/>
+                                                <strong>Outcome:</strong> Targeting 20% organic traffic increase.
+                                            </p>
+                                            <p className="text-sm text-gray-400">Clear, actionable, and measurable.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Request Form Section */}
+                    <div id="request-form" className="py-24 bg-gray-50 border-b border-gray-100">
+                        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                            
+                            {/* Progress Bar */}
+                            <div className="mb-8">
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="text-sm font-medium text-[#1a2942]">Request completeness</label>
+                                    <span className="text-sm font-medium text-[#00d9ff]">{Math.round(progress)}%</span>
+                                </div>
+                                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-[#00d9ff] transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(0,217,255,0.5)]"
+                                        style={{ width: `${progress}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Form Card */}
+                            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 transition-shadow duration-300 hover:shadow-xl">
+                                <h2 className="text-2xl font-bold text-[#1a2942] mb-6">New Request Details</h2>
+                                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                                    
+                                    <div className="group">
+                                        <label htmlFor="businessProblem" className="block text-sm font-medium text-[#1a2942] mb-2 group-focus-within:text-[#00d9ff] transition-colors">
+                                            Business Problem
+                                        </label>
+                                        <textarea
+                                            id="businessProblem"
+                                            name="businessProblem"
+                                            rows="4"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#00d9ff] focus:ring-2 focus:ring-[#00d9ff]/20 outline-none transition-all duration-200 resize-none text-gray-900 placeholder:text-gray-400 bg-gray-50 focus:bg-white"
+                                            placeholder="Describe the business problem you are trying to solve..."
+                                            value={formData.businessProblem}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+
+                                    <div className="group">
+                                        <label htmlFor="inputs" className="block text-sm font-medium text-[#1a2942] mb-2 group-focus-within:text-[#00d9ff] transition-colors">
+                                            Existing Inputs/Data
+                                        </label>
+                                        <textarea
+                                            id="inputs"
+                                            name="inputs"
+                                            rows="3"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#00d9ff] focus:ring-2 focus:ring-[#00d9ff]/20 outline-none transition-all duration-200 resize-none text-gray-900 placeholder:text-gray-400 bg-gray-50 focus:bg-white"
+                                            placeholder="What data sources or inputs are currently available?"
+                                            value={formData.inputs}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+
+                                    <div className="group">
+                                        <label htmlFor="constraints" className="block text-sm font-medium text-[#1a2942] mb-2 group-focus-within:text-[#00d9ff] transition-colors">
+                                            Constraints/Risk
+                                        </label>
+                                        <textarea
+                                            id="constraints"
+                                            name="constraints"
+                                            rows="3"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#00d9ff] focus:ring-2 focus:ring-[#00d9ff]/20 outline-none transition-all duration-200 resize-none text-gray-900 placeholder:text-gray-400 bg-gray-50 focus:bg-white"
+                                            placeholder="Are there any known constraints or risks?"
+                                            value={formData.constraints}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+
+                                    <div className="group">
+                                        <label htmlFor="successCriteria" className="block text-sm font-medium text-[#1a2942] mb-2 group-focus-within:text-[#00d9ff] transition-colors">
+                                            Success Criteria
+                                        </label>
+                                        <textarea
+                                            id="successCriteria"
+                                            name="successCriteria"
+                                            rows="3"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#00d9ff] focus:ring-2 focus:ring-[#00d9ff]/20 outline-none transition-all duration-200 resize-none text-gray-900 placeholder:text-gray-400 bg-gray-50 focus:bg-white"
+                                            placeholder="How will you measure success?"
+                                            value={formData.successCriteria}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+
+                                    <div className="pt-4">
+                                        <button
+                                            type="submit"
+                                            className="w-full bg-[#00d9ff] text-white font-semibold py-4 rounded-lg hover:bg-[#00b8d4] hover:shadow-lg hover:shadow-[#00d9ff]/20 transition-all duration-200 cursor-pointer active:scale-[0.99] active:shadow-none"
+                                        >
+                                            Submit Request
+                                        </button>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Recent Requests Section */}
+                    <div className="py-24 bg-white border-b border-gray-100">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center justify-between mb-10">
+                                <h2 className="text-2xl font-bold text-[#1a2942]">Your Recent Requests</h2>
+                                <a href="#" className="text-sm font-medium text-gray-500 hover:text-[#00d9ff] transition-colors">View All</a>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {/* Request Card 1 */}
+                                <div className="p-8 rounded-xl border border-gray-200 hover:shadow-lg hover:border-[#00d9ff]/30 transition-all duration-300 group cursor-pointer bg-white relative top-0 hover:-top-1">
+                                    <div className="mb-4">
+                                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-md bg-orange-50 text-orange-600 border border-orange-100">Pending Approval</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-[#1a2942] mb-2 group-hover:text-[#00d9ff] transition-colors">GPT-4 Access - Marketing</h3>
+                                    <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                                        Requesting API keys for the copy generation tool pilot. Estimated token usage: 1M/month.
+                                    </p>
+                                    <div className="flex items-center justify-between text-xs text-gray-400 font-medium pt-4 border-t border-gray-50">
+                                        <span>Req #4092</span>
+                                        <span>2 hrs ago</span>
+                                    </div>
+                                </div>
+
+                                {/* Request Card 2 */}
+                                <div className="p-8 rounded-xl border border-gray-200 hover:shadow-lg hover:border-[#00d9ff]/30 transition-all duration-300 group cursor-pointer bg-white relative top-0 hover:-top-1">
+                                    <div className="mb-4">
+                                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-600 border border-emerald-100">Approved</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-[#1a2942] mb-2 group-hover:text-[#00d9ff] transition-colors">Llama 2 Fine-tuning</h3>
+                                    <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                                        Provisioning A100 instance for 48 hours. Internal product categorization model.
+                                    </p>
+                                    <div className="flex items-center justify-between text-xs text-gray-400 font-medium pt-4 border-t border-gray-50">
+                                        <span>Req #4088</span>
+                                        <span>Yesterday</span>
+                                    </div>
+                                </div>
+
+                                {/* Request Card 3 */}
+                                <div className="p-8 rounded-xl border border-gray-200 hover:shadow-lg hover:border-[#00d9ff]/30 transition-all duration-300 group cursor-pointer bg-white relative top-0 hover:-top-1">
+                                    <div className="mb-4">
+                                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-600 border border-emerald-100">Deployed</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-[#1a2942] mb-2 group-hover:text-[#00d9ff] transition-colors">Embedding Service</h3>
+                                    <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                                        Vector database setup for the knowledge base search update.
+                                    </p>
+                                    <div className="flex items-center justify-between text-xs text-gray-400 font-medium pt-4 border-t border-gray-50">
+                                        <span>Req #4012</span>
+                                        <span>Oct 24</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer Section */}
+                    <footer className="bg-gray-50 border-t border-gray-200 pt-16 pb-12">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                                <div>
+                                    <h4 className="text-sm font-bold text-[#1a2942] uppercase tracking-wider mb-4">Product</h4>
+                                    <ul className="space-y-3">
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Features</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Pricing</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Roadmap</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Changelog</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-[#1a2942] uppercase tracking-wider mb-4">Company</h4>
+                                    <ul className="space-y-3">
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">About Us</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Blog</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Careers</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Press</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-[#1a2942] uppercase tracking-wider mb-4">Resources</h4>
+                                    <ul className="space-y-3">
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Documentation</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Support</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Community</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Status</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-[#1a2942] uppercase tracking-wider mb-4">Legal</h4>
+                                    <ul className="space-y-3">
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Privacy Policy</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Terms of Service</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Security</a></li>
+                                        <li><a href="#" className="text-gray-600 hover:text-[#00d9ff] text-sm transition-colors">Compliance</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-200">
+                                <div className="flex items-center gap-2 mb-4 md:mb-0">
+                                    <div className="w-6 h-6 bg-[#00d9ff] rounded-sm flex items-center justify-center shadow-sm">
+                                        <Box className="w-4 h-4 text-[#1a2942]" />
+                                    </div>
+                                    <span className="text-lg font-bold text-[#1a2942]">AI Desk</span>
+                                </div>
+                                <p className="text-gray-500 text-sm">
+                                    © 2024 AI Request Desk. All rights reserved.
+                                </p>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Home />);
+    </script>
+</body>
+</html>
