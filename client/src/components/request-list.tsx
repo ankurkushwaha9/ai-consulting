@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, AlertCircle, MessageSquare, ChevronRight } from "lucide-react";
 import type { AiRequest } from "@shared/schema";
 import { format } from "date-fns";
+import { Link } from "wouter";
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400", icon: Clock },
@@ -18,32 +19,37 @@ function RequestCard({ request }: { request: AiRequest }) {
   const StatusIcon = status.icon;
 
   return (
-    <Card className="hover-elevate active-elevate-2 transition-all cursor-pointer" data-testid={`card-request-${request.id}`}>
-      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          <div className="w-10 h-10 rounded-lg bg-[#00d9ff]/10 flex items-center justify-center flex-shrink-0">
-            <FileText className="w-5 h-5 text-[#00d9ff]" />
+    <Link href={`/requests/${request.id}`}>
+      <Card className="hover-elevate active-elevate-2 transition-all cursor-pointer group" data-testid={`card-request-${request.id}`}>
+        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-lg bg-[#00d9ff]/10 flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5 text-[#00d9ff]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base font-semibold truncate" data-testid={`text-request-title-${request.id}`}>
+                {request.title}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {request.department} &bull; {format(new Date(request.createdAt), "MMM d, yyyy")}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <CardTitle className="text-base font-semibold truncate" data-testid={`text-request-title-${request.id}`}>
-              {request.title}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {request.department} &bull; {format(new Date(request.createdAt), "MMM d, yyyy")}
-            </p>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Badge variant="secondary" className={`${status.color} no-default-hover-elevate no-default-active-elevate`}>
+              <StatusIcon className="w-3 h-3 mr-1" />
+              {status.label}
+            </Badge>
+            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-[#00d9ff] transition-colors" />
           </div>
-        </div>
-        <Badge variant="secondary" className={`${status.color} flex-shrink-0 no-default-hover-elevate no-default-active-elevate`}>
-          <StatusIcon className="w-3 h-3 mr-1" />
-          {status.label}
-        </Badge>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-request-problem-${request.id}`}>
-          {request.businessProblem}
-        </p>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-request-problem-${request.id}`}>
+            {request.businessProblem}
+          </p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
