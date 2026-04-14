@@ -2,7 +2,7 @@
 
 # 🤖 AI Request Desk
 
-### Centralized AI Resource Management Platform for Enterprise Teams
+### Enterprise AI Governance & Usage Management Platform
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-00C853?style=for-the-badge&logo=vercel&logoColor=white)](https://ai-consulting--ankur0609.replit.app)
 [![TypeScript](https://img.shields.io/badge/TypeScript-83.9%25-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
